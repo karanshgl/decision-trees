@@ -27,4 +27,4 @@ for index in range(test_set.shape[0]):
 		error += 1
 print(error*1.0/test_set.shape[0])
 
-# tree.save('./model/tree.pkl')
+tree.save('./model/tree.pkl')

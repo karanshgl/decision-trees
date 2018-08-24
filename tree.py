@@ -44,7 +44,7 @@ class DecisionTree:
 		"""
 		Saves the self
 		"""
-		with open(file_name) as fp:
+		with open(file_name,'wb') as fp:
 			pickle.dump(self, fp)
 
 
@@ -101,9 +101,6 @@ class DecisionTree:
 
 		for feature in range(features):
 			# For all features calculate information gain
-
-			# Find the value that gives the best split
-
 	
 			# Left side contains the indices of rows which contain the feature
 			left_side  = np.argwhere(x_vals[:,feature] > 0)
