@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from tree import DecisionTree
+from decision_tree import DecisionTree
+from random_forest import RandomForest
 from preprocess import save_train_set, save_test_set
 
 save_train_set(2000)
@@ -25,14 +26,29 @@ test_labels = pd.read_csv('./data/test_labels.csv', delimiter = ',', header = No
 test_labels = np.array(test_labels)
 
 
-tree = DecisionTree(max_height = 20)
-tree.fit(train_set, train_labels)
-error = 0
-for index in range(validation_set.shape[0]):
-	if tree.get_label(validation_set[index]) == validation_labels[index]:
-		error += 1
-print(error*1.0/validation_set.shape[0])
-print("Height is ", tree.height)
-print("Leaves is ", tree.leaves)
+# tree = DecisionTree(max_height = 30)
+# tree.fit(train_set, train_labels)
+# error = 0
+# for index in range(validation_set.shape[0]):
+# 	if tree.get_label(validation_set[index]) == validation_labels[index]:
+# 		error += 1
+# print("Val: ", error*1.0/validation_set.shape[0])
+# error = 0
+# for index in range(test_set.shape[0]):
+# 	if tree.get_label(test_set[index]) == test_labels[index]:
+# 		error += 1
 
-tree.save('./model/tree.pkl')
+# print("Test: ", error*1.0/test_set.shape[0])
+# print("Height is ", tree.height)
+# print("Leaves is ", tree.leaves)
+
+# tree.save('./model/tree.pkl')
+
+forest = RandomForest(tree_count = 50, feature_bagging = 325, max_height = 50)
+forest.fit(train_set, train_labels)
+error = 0
+for index in range(test_set.shape[0]):
+	if forest.predict(test_set[index]) == test_labels[index]:
+		error += 1
+
+print(error*1.0/test_set.shape[0])
