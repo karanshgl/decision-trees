@@ -83,6 +83,7 @@ def save_random_set(sample_size, train = True):
 	"""
 	Saves samples in .csv file 
 	"""
+	sample_size = sample_size//2 # Since Equal Number of Positive and Negative Samples
 	instance_set = get_sample(sample_size, train)
 	matrix, labels = get_train_set(instance_set)
 	train_or_test = 'train' if train else 'test'
