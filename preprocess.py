@@ -7,13 +7,14 @@ import numpy as np
 import pandas as pd
 
 
-def get_sample(sample_size, train = True):
+def get_sample(sample_size, keep_validation):
 	"""
-	Returns a training set with sample size number of positive and negative examples
+	Returns a training and validation set with sample size number of positive and negative examples
 	"""
-	train_or_test = 'train' if train else 'test'
+	validation_size = int(sample_size*keep_validation)
+
 	train_space = []
-	with open(TRAIN_BOW if train else TEST_BOW) as fp:
+	with open(TRAIN_BOW) as fp:
 		train_space = fp.readlines()
 	train_positive_space = [[1] + sample.split(' ')[1:] for sample in train_space if int(sample.split(' ')[0]) >=7]
 	train_negative_space = [[-1] + sample.split(' ')[1:] for sample in train_space if int(sample.split(' ')[0]) <=4]
@@ -22,48 +23,100 @@ def get_sample(sample_size, train = True):
 	pos_indices = list(range(0,len(train_positive_space)))
 	shuffle(pos_indices)
 	train_positive_sample = [train_positive_space[i] for i in pos_indices[:sample_size]]
+	validation_positive_sample = [train_positive_space[i] for i in pos_indices[sample_size:sample_size+validation_size]]
 
 	# Write in a file
-	with open('./sample/positive_'+ train_or_test +'_indices.txt', 'w') as fp:
+	with open('./sample/positive_train_indices.txt', 'w') as fp:
 		for line in pos_indices[:sample_size]:
 			fp.write(str(line)+'\n')
+
+	with open('./sample/positive_validation_indices.txt', 'w') as fp:
+		for line in pos_indices[sample_size:sample_size+validation_size]:
+			fp.write(str(line)+'\n')
+
 
 	# Negative
 	neg_indices = list(range(0,len(train_negative_space)))
 	shuffle(neg_indices)
 	train_negative_sample = [train_negative_space[i] for i in neg_indices[:sample_size]]
+	validation_negative_sample = [train_negative_space[i] for i in neg_indices[sample_size:sample_size+validation_size]]
 
 	# Write in a file
-	with open('./sample/negative_'+ train_or_test +'_indices.txt', 'w') as fp:
+	with open('./sample/negative_train_indices.txt', 'w') as fp:
 		for line in neg_indices[:sample_size]:
+			fp.write(str(line)+'\n')
+
+	with open('./sample/negative_validation_indices.txt', 'w') as fp:
+		for line in neg_indices[sample_size:sample_size+validation_size]:
 			fp.write(str(line)+'\n')
 
 	training_set = train_positive_sample + train_negative_sample
 	shuffle(training_set)
 
-	return training_set
+	validation_set = validation_positive_sample + validation_negative_sample
+	shuffle(validation_set)
+
+	return training_set, validation_set
+
+def get_test(sample_size):
+	"""
+	Returns Test Set with sample size number of positive and negative examples
+	"""
+	test_space = []
+	with open(TEST_BOW) as fp:
+		test_space = fp.readlines()
+	test_positive_space = [[1] + sample.split(' ')[1:] for sample in test_space if int(sample.split(' ')[0]) >=7]
+	test_negative_space = [[-1] + sample.split(' ')[1:] for sample in test_space if int(sample.split(' ')[0]) <=4]
+
+	# Positive
+	pos_indices = list(range(0,len(test_positive_space)))
+	shuffle(pos_indices)
+	test_positive_sample = [test_positive_space[i] for i in pos_indices[:sample_size]]
+
+	# Write in a file
+	with open('./sample/positive_test_indices.txt', 'w') as fp:
+		for line in pos_indices[:sample_size]:
+			fp.write(str(line)+'\n')
 
 
-def get_train_set(training_set, clustering = True):
+	# Negative
+	neg_indices = list(range(0,len(test_negative_space)))
+	shuffle(neg_indices)
+	test_negative_sample = [test_negative_space[i] for i in neg_indices[:sample_size]]
+
+	# Write in a file
+	with open('./sample/negative_test_indices.txt', 'w') as fp:
+		for line in neg_indices[:sample_size]:
+			fp.write(str(line)+'\n')
+
+
+	test_set = test_positive_sample + test_negative_sample
+	shuffle(test_set)
+
+	return test_set
+
+
+
+def get_data(dataset, clustering = True):
 	"""
 	Returns the instance matrix and corresponding labels of a training set
 
 	Parameters:
-	training_set: the result from get_sample method
+	dataset: the result from get_sample method
 	"""
 
 	if clustering:
 		w2b, bins = word2bin()
 
-		train_matrix = np.zeros((len(training_set), len(bins)))
-		train_labels = np.array([i[0] for i in training_set])
+		matrix = np.zeros((len(dataset), len(bins)))
+		labels = np.array([i[0] for i in dataset])
 
-		for i,instance in enumerate(training_set):
+		for i,instance in enumerate(dataset):
 			for features in instance[1:]:
 				feature = list(map(int,features.split(':')))
 				if feature[0] not in w2b.keys(): continue
 				b_index = w2b[feature[0]]
-				train_matrix[i,b_index] += feature[1]
+				matrix[i,b_index] += feature[1]
 	else:
 		# Get most common words from vocab with decent polarity
 		p_vals = []
@@ -75,29 +128,54 @@ def get_train_set(training_set, clustering = True):
 		
 		
 
-	return train_matrix, train_labels
+	return matrix, labels
 
+def to_csv(filename, data):
+	df = pd.DataFrame(data)
+	df.to_csv(filename, header=None, index = False)
 
-
-def save_random_set(sample_size, train = True):
+def save_train_set(sample_size, keep_validation = 0.2):
 	"""
 	Saves samples in .csv file 
 	"""
 	sample_size = sample_size//2 # Since Equal Number of Positive and Negative Samples
-	instance_set = get_sample(sample_size, train)
-	matrix, labels = get_train_set(instance_set)
-	train_or_test = 'train' if train else 'test'
+	instance_set, validation_set = get_sample(sample_size, keep_validation)
+	train_matrix, train_labels = get_data(instance_set)
+	validation_matrix, validation_labels = get_data(validation_set)
 
-	filename_matrix = './data/'+ train_or_test +'.csv'
-	filename_labels = './data/'+ train_or_test +'_labels.csv'
+
+	# Save Train Set
+	filename_matrix = './data/train.csv'
+	filename_labels = './data/train_labels.csv'
 
 	# Save to csv
-	df = pd.DataFrame(matrix)
-	df.to_csv(filename_matrix, header=None, index = False)
-	df = pd.DataFrame(labels)
-	df.to_csv(filename_labels, header=None, index = False)
+	to_csv(filename_matrix, train_matrix)
+	to_csv(filename_labels, train_labels)
 
-	return filename_matrix, filename_labels
+	# Save Validation
+	filename_matrix = './data/validation.csv'
+	filename_labels = './data/validation_labels.csv'
+
+	# Save to csv
+	to_csv(filename_matrix, validation_matrix)
+	to_csv(filename_labels, validation_labels)
+
+def save_test_set(sample_size):
+
+	sample_size = sample_size//2 
+	instance_set = get_test(sample_size)
+	test_matrix, test_labels = get_data(instance_set)
+
+	# Save Test Set
+	filename_matrix = './data/test.csv'
+	filename_labels = './data/test_labels.csv'
+
+	# Save to csv
+	to_csv(filename_matrix, test_matrix)
+	to_csv(filename_labels, test_labels)
+
+
+
 
 
 
