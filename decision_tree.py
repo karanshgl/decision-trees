@@ -189,7 +189,7 @@ class DecisionTree:
 		"""
 		Tree traversal to get the label
 		"""
-
+		
 		if root.label: return root.label
 
 		feature = root.feature_index

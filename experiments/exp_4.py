@@ -48,8 +48,17 @@ feature_count = train_set.shape[1]
 
 # Statistics of Learnt Tree
 tree = DecisionTree().load('../model/tree.pkl')
+print("-----------------------------")
+print("Post-Pruning by Node Removal")
+print("-----------------------------")
+
 acc_fun_val = tree.prune(test_set, test_labels)
 
 sub_acc = [(int(i+1),val) for i,val in enumerate(acc_fun_val)]
+for i,val in enumerate(acc_fun_val):
+	print("Number of subtrees removed: {} | Accuracy: {}".format(i+1,val))
+	
+print("-----------------------------")
 sub_acc = np.array(sub_acc)
 np.savetxt('./graphs/subtree_vs_test_acc.csv', sub_acc, delimiter=",")
+tree.save('../model/pruning/tree_pruned.pkl')

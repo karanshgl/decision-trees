@@ -20,6 +20,7 @@ most frequently used as split functions in the internal nodes of the tree, etc.
 from decision_tree import DecisionTree
 import numpy as np
 import pandas as pd
+import argparse
 
 ###################################################################################################
 # Load the data
@@ -100,3 +101,43 @@ for feature in range(feature_count):
 print("-----------------------------")
 print("-----------------------------")
 
+
+"""
+Retrain:
+height_options = [0, 5, 10, 20, 40, 60]
+
+for height in height_options:
+	tree = DecisionTree(max_height = height)
+	tree.fit(train_set, train_labels)
+	print("Early Stopping by Max Height = {}".format(height))
+	print("-----------------------------")
+	print("Height: {} | Terminal Nodes: {}".format(tree.height,tree.leaves))
+	print("Train Accuracy: ", tree.accuracy(train_set, train_labels))
+	print("Validation Accuracy: ", tree.accuracy(validation_set, validation_labels))
+	print("Test Accuracy: ", tree.accuracy(test_set, test_labels))
+	print("Number of times an attribute is used as the splitting function:")
+	print("Feature (Polarity Bin): Frequency")
+	for feature in range(feature_count):
+		print('%.2f'%bins[feature],': ', tree.attribute_frequency[feature])
+
+	print("-----------------------------")
+
+ig_options = [0, 1e-4, 1e-3, 1e-2]
+
+for ig in ig_options:
+	tree = DecisionTree(ig_threshold = ig)
+	tree.fit(train_set, train_labels)
+	print("Early Stopping by Information Gain = {}".format(ig))
+	print("-----------------------------")
+	print("Height: {} | Terminal Nodes: {}".format(tree.height,tree.leaves))
+	print("Train Accuracy: ", tree.accuracy(train_set, train_labels))
+	print("Validation Accuracy: ", tree.accuracy(validation_set, validation_labels))
+	print("Test Accuracy: ", tree.accuracy(test_set, test_labels))
+	print("Number of times an attribute is used as the splitting function:")
+	print("Feature (Polarity Bin): Frequency")
+	for feature in range(feature_count):
+		print('%.2f'%bins[feature],': ', tree.attribute_frequency[feature])
+
+	print("-----------------------------")
+
+"""
