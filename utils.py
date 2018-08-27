@@ -38,6 +38,19 @@ def best_split(feature, labels):
 	return val_to_return
 
 
+def add_noise(labels, noise_percent = 0.005):
+	"""
+	Given the labels, it toggles the noise_perfect number of labels
+	"""
+	rows = int(labels.shape[0]*noise_percent)
+	rows = np.random.choice(labels.shape[0], rows)
+	labels[rows] = np.where(labels[rows] == 1, -1, 1)
+
+	return labels
+
+
+
+
 
 
 

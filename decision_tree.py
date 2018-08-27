@@ -1,6 +1,7 @@
 import numpy as np
 from utils import entropy, best_split
 import pickle
+from collections import deque, defaultdict
 
 class Node:
 	"""
@@ -58,12 +59,22 @@ class DecisionTree:
 		self.leaves = 0
 		self.height = 0
 
+		# Freqeuncy of the attributes used
+		self.attribute_frequency = defaultdict(int)
+
 	def save(self, file_name):
 		"""
 		Saves the self
 		"""
 		with open(file_name,'wb') as fp:
 			pickle.dump(self, fp)
+
+	def load(self, file_name):
+		"""
+		Loads the model to the self
+		"""
+		with open(file_name, 'rb') as fp:
+			return pickle.load(fp)
 
 
 	def fit(self, x_vals, y_vals):
@@ -102,7 +113,7 @@ class DecisionTree:
 		elif y_vals.mean() == -1:
 			root.put_label(-1)
 			return root
-		elif x_vals.shape[1] == 0 or (self.max_height and cur_height >= self.max_height-1):
+		elif (self.max_height and cur_height >= self.max_height):
 			root.put_label((1 if y_vals.mean()>=0 else -1))
 			return root
 
@@ -119,10 +130,8 @@ class DecisionTree:
 
 		for feature in range(features):
 			# For all features calculate information gain
-	
 			# Left side contains the indices of rows which contain the feature
 			left_side  = np.argwhere(x_vals[:,feature] > 0)
-
 			# Right side contains the indices of rows which doesn't contain the feature
 			right_side = np.argwhere(x_vals[:, feature] == 0)
 			# If splits cannot happen
@@ -161,13 +170,13 @@ class DecisionTree:
 			return root
 
 		root.feature_index = root_feature
+		self.attribute_frequency[root_feature] += 1
 
 		# Build left and right subtrees
-		x_left = np.delete(x_left, root_feature, axis = 1)
+		# x_left = np.delete(x_left, root_feature, axis = 1)
 		root.left = self._build_tree(x_left, y_left, cur_height+1)
-		x_right = np.delete(x_right, root_feature, axis = 1)
+		# x_right = np.delete(x_right, root_feature, axis = 1)
 		root.right = self._build_tree(x_right, y_right, cur_height+1)
-
 		# Add Parent
 		root.left.parent = root
 		root.right.parent = root
@@ -186,15 +195,15 @@ class DecisionTree:
 		feature = root.feature_index
 		if X[feature]:
 			# It has the feature
-			X = np.delete(X, feature)
+			# X = np.delete(X, feature)
 			return self._find_label(X, root.left)
 		else:
 			# It doesn't have the feature
-			X = np.delete(X, feature)
+			# X = np.delete(X, feature)
 			return self._find_label(X, root.right)
 
 
-	def get_label(self, X):
+	def predict(self, X):
 		"""
 		Returns the label for the instance X
 		"""
@@ -206,16 +215,74 @@ class DecisionTree:
 		"""
 		Returns the height of the tree
 		"""
-		if root == None:
-			return 0
+		if root.label: return 0
+
 		return max(self._height(root.left), self._height(root.right))+1
 
 	def _leaves(self, root):
 
-		if root.label:
-			return 1
+		if root.label: return 1
 
 		return self._leaves(root.left) + self._leaves(root.right)
+
+	def _validation_accuracy(self, validation_set, validation_labels):
+		"""
+		Returns the validation error of the tree
+		"""
+
+		acc = 0
+		for i,instance in enumerate(validation_set):
+			if self.predict(instance) == validation_labels[i]: acc +=1
+		return acc*1.0/validation_set.shape[0]
+
+
+	def prune(self, validation_set, validation_labels):
+		"""
+		Prunes the tree
+		"""
+		queue = deque([self.root])
+
+		while(len(queue)):
+			# Till Queue is not Empty
+
+			root = queue.popleft()
+			# Check Initial Error
+			init_val_acc = self._validation_accuracy(validation_set, validation_labels)
+			# Assume the node becomes a leaf
+			root.label = 1 if root.positive_instances >= root.negative_instances else -1
+			# Check final error
+			prune_val_acc = self._validation_accuracy(validation_set,validation_labels)
+
+			# See if changes are valid
+			if(prune_val_acc < init_val_acc): root.label = None
+			else:	continue
+
+			# Continue for its leaves
+			if root.left.label == None: queue.append(root.left)
+			if root.right.label == None: queue.append(root.right)
+
+		
+		self.height = self._height(self.root)
+		self.leaves = self._leaves(self.root)
+
+
+	def accuracy(self, feature_matrix, labels):
+		"""
+		Returns the accuracy of the tree on a feature matrix
+		"""
+
+		accuracy = 0
+		for i,instance in enumerate(feature_matrix):
+			if self.predict(instance) == labels[i]:
+				accuracy += 1
+
+		return accuracy*1.0/labels.shape[0]
+
+
+
+
+
+
 
 
 	
