@@ -1,5 +1,5 @@
 import numpy as np
-from utils import entropy, best_split
+from utils import entropy
 import pickle
 from collections import deque, defaultdict
 
@@ -113,7 +113,7 @@ class DecisionTree:
 		elif y_vals.mean() == -1:
 			root.put_label(-1)
 			return root
-		elif (self.max_height and cur_height >= self.max_height):
+		elif (self.max_height != None and cur_height >= self.max_height):
 			root.put_label((1 if y_vals.mean()>=0 else -1))
 			return root
 
@@ -241,7 +241,7 @@ class DecisionTree:
 		Prunes the tree
 		"""
 		queue = deque([self.root])
-
+		acc_func = []
 		while(len(queue)):
 			# Till Queue is not Empty
 
@@ -255,7 +255,9 @@ class DecisionTree:
 
 			# See if changes are valid
 			if(prune_val_acc < init_val_acc): root.label = None
-			else:	continue
+			else:
+				acc_func.append(prune_val_acc)
+				continue
 
 			# Continue for its leaves
 			if root.left.label == None: queue.append(root.left)
@@ -264,6 +266,7 @@ class DecisionTree:
 		
 		self.height = self._height(self.root)
 		self.leaves = self._leaves(self.root)
+		return acc_func
 
 
 	def accuracy(self, feature_matrix, labels):
@@ -277,6 +280,7 @@ class DecisionTree:
 				accuracy += 1
 
 		return accuracy*1.0/labels.shape[0]
+
 
 
 

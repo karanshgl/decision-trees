@@ -96,3 +96,16 @@ class RandomForest:
 
 		return 1 if label>=0 else -1
 
+
+	def accuracy(self, feature_matrix, labels):
+		"""
+		Returns the accuracy of the tree on a feature matrix
+		"""
+
+		accuracy = 0
+		for i,instance in enumerate(feature_matrix):
+			if self.predict(instance) == labels[i]:
+				accuracy += 1
+
+		return accuracy*1.0/labels.shape[0]
+
