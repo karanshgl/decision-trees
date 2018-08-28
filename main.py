@@ -4,28 +4,64 @@ from decision_tree import DecisionTree
 from random_forest import RandomForest
 from utils import add_noise
 from preprocess import save_train_set, save_test_set
+import sys
+
+from experiments.exp_2 import run as exp_2_run
+from experiments.exp_3 import run as exp_3_run
+from experiments.exp_4 import run as exp_4_run
+from experiments.exp_5 import run as exp_5_run
+
+if len(sys.argv) < 2:
+	print("Enter Experiment Number")
+	exit()
+
+elif sys.argv[1] == '2':
+	retrain = int(input("Retrain? (0/1) ")) == 1
+	exp_2_run(retrain)
+
+elif sys.argv[1] == '3':
+	retrain = int(input("Retrain? (0/1) ")) == 1
+	exp_3_run(retrain)
+
+elif sys.argv[1] == '4':
+	retrain = int(input("Retrain? (0/1) ")) == 1
+	exp_4_run(retrain)
+
+elif sys.argv[1] == '5':
+	exp_5_run()
+
+
+
+
+
+
+
+
+
+
+
+
 
 # save_train_set(1000, keep_validation = 0.5)
 # save_test_set(1000)
 
-train_set = pd.read_csv('./data/train.csv', delimiter = ',', header = None)
-train_set = np.array(train_set)
+# train_set = pd.read_csv('./data/train.csv', delimiter = ',', header = None)
+# train_set = np.array(train_set)
 
-train_labels = pd.read_csv('./data/train_labels.csv', delimiter = ',', header = None)
-train_labels = np.array(train_labels)
+# train_labels = pd.read_csv('./data/train_labels.csv', delimiter = ',', header = None)
+# train_labels = np.array(train_labels)
 
-validation_set = pd.read_csv('./data/validation.csv', delimiter = ',', header = None)
-validation_set = np.array(validation_set)
+# validation_set = pd.read_csv('./data/validation.csv', delimiter = ',', header = None)
+# validation_set = np.array(validation_set)
 
-validation_labels = pd.read_csv('./data/validation_labels.csv', delimiter = ',', header = None)
-validation_labels = np.array(validation_labels)
+# validation_labels = pd.read_csv('./data/validation_labels.csv', delimiter = ',', header = None)
+# validation_labels = np.array(validation_labels)
 
-test_set = pd.read_csv('./data/test.csv', delimiter = ',', header = None)
-test_set = np.array(test_set)
+# test_set = pd.read_csv('./data/test.csv', delimiter = ',', header = None)
+# test_set = np.array(test_set)
 
-test_labels = pd.read_csv('./data/test_labels.csv', delimiter = ',', header = None)
-test_labels = np.array(test_labels)
-
+# test_labels = pd.read_csv('./data/test_labels.csv', delimiter = ',', header = None)
+# test_labels = np.array(test_labels)
 
 # noise = [0.005, 0.01, 0.05, 0.1]
 # for n in noise:

@@ -189,7 +189,7 @@ class DecisionTree:
 		"""
 		Tree traversal to get the label
 		"""
-		
+
 		if root.label: return root.label
 
 		feature = root.feature_index
@@ -242,6 +242,8 @@ class DecisionTree:
 		"""
 		queue = deque([self.root])
 		acc_func = []
+		nodes_removed = []
+		total_nodes = 0
 		while(len(queue)):
 			# Till Queue is not Empty
 
@@ -249,6 +251,7 @@ class DecisionTree:
 			# Check Initial Error
 			init_val_acc = self._validation_accuracy(validation_set, validation_labels)
 			# Assume the node becomes a leaf
+			subtree_nodes = self.get_subtree_size(root)
 			root.label = 1 if root.positive_instances >= root.negative_instances else -1
 			# Check final error
 			prune_val_acc = self._validation_accuracy(validation_set,validation_labels)
@@ -257,6 +260,8 @@ class DecisionTree:
 			if(prune_val_acc < init_val_acc): root.label = None
 			else:
 				acc_func.append(prune_val_acc)
+				total_nodes += subtree_nodes
+				nodes_removed.append(total_nodes)
 				continue
 
 			# Continue for its leaves
@@ -266,7 +271,47 @@ class DecisionTree:
 		
 		self.height = self._height(self.root)
 		self.leaves = self._leaves(self.root)
-		return acc_func
+		return acc_func, nodes_removed
+
+	def prune_val_test(self, validation_set, validation_labels, test_set, test_labels):
+		"""
+		Prunes the tree on validation set but also returns the test
+		"""
+		queue = deque([self.root])
+		acc_func = []
+		test_func = []
+		nodes_removed = []
+		total_nodes = 0
+		while(len(queue)):
+			# Till Queue is not Empty
+
+			root = queue.popleft()
+			# Check Initial Error
+			init_val_acc = self._validation_accuracy(validation_set, validation_labels)
+			# Assume the node becomes a leaf
+			subtree_nodes = self.get_subtree_size(root)
+			root.label = 1 if root.positive_instances >= root.negative_instances else -1
+			# Check final error
+			prune_val_acc = self._validation_accuracy(validation_set,validation_labels)
+
+			# See if changes are valid
+			if(prune_val_acc < init_val_acc): root.label = None
+			else:
+				acc_func.append(prune_val_acc)
+				test_func.append(self._validation_accuracy(test_set, test_labels))
+				total_nodes += subtree_nodes
+				nodes_removed.append(total_nodes)
+				continue
+
+			# Continue for its leaves
+			if root.left.label == None: queue.append(root.left)
+			if root.right.label == None: queue.append(root.right)
+
+		
+		self.height = self._height(self.root)
+		self.leaves = self._leaves(self.root)
+		return acc_func, nodes_removed, test_func
+
 
 
 	def accuracy(self, feature_matrix, labels):
@@ -280,6 +325,16 @@ class DecisionTree:
 				accuracy += 1
 
 		return accuracy*1.0/labels.shape[0]
+
+	def get_subtree_size(self, root):
+
+		if(root.label): return 1
+		return self.get_subtree_size(root.left) + self.get_subtree_size(root.right) + 1 
+
+
+
+
+
 
 
 

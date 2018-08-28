@@ -34,5 +34,9 @@ def word2bin(bin_size = 0.01):
 	with open('./bin/bins.pkl', 'wb') as fp:
 		pickle.dump(bins,fp)
 
-	return w2b, bins
+	with open('./data/selected-features-indices.txt', 'w') as fp:
+		for i in p_vals[:,0]:
+			fp.write(str(int(i)))
+			fp.write('\n')
 
+	return w2b, bins
